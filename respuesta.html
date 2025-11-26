@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Visor de Código — Respuesta</title>
+  <meta name="description" content="Visor autosuficiente que muestra y permite copiar/descargar el contenido de un archivo JS." />
+  <style>
+    :root{
+      --bg: #f7faf9;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent: #8dd3c7;
+      --accent-2: #ffcdb2;
+      --shadow: 0 6px 18px rgba(22,28,45,0.06);
+      --radius: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --transition: 220ms cubic-bezier(.2,.9,.3,1);
+    }
+
+    /* Base layout */
+    html,body{height:100%;margin:0;font-family:var(--sans);color:#0f172a;background:linear-gradient(180deg,var(--bg),#fdfeff);-webkit-font-smoothing:antialiased;line-height:1.4}
+    .app{max-width:1100px;margin:36px auto;padding:20px;animation:fadeIn 420ms ease both}
+    header{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px}
+    .title{flex:1}
+    h1{font-size:1.25rem;margin:0;color:#06283d}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:0.95rem}
+
+    /* Panels */
+    .main{display:flex;gap:18px;align-items:flex-start}
+    .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;transition:transform var(--transition),box-shadow var(--transition);will-change:transform}
+    .panel:hover{transform:translateY(-4px)}
+    .left{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+    .right{width:320px;flex-shrink:0}
+
+    /* Controls */
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    button.control{
+      background:linear-gradient(180deg,#fff,#fbfdff);
+      border:1px solid rgba(6,40,61,0.06);
+      padding:8px 12px;border-radius:10px;font-weight:600;color:#01303f;cursor:pointer;
+      display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 10px rgba(2,6,23,0.04);
+      transition:transform var(--transition),box-shadow var(--transition),opacity var(--transition);
+    }
+    button.control:hover{transform:translateY(-3px)}
+    button.control:active{transform:translateY(-1px)}
+    button.control:focus{outline:none;box-shadow:0 0 0 4px rgba(141,211,199,0.18)}
+    button.control[aria-pressed="true"]{background:linear-gradient(180deg,var(--accent),#7fcfbd);color:#062a2a}
+
+    /* Code area */
+    .code-card{padding:12px 14px;font-family:var(--mono);font-size:13px;line-height:1.5;color:#0b1220;overflow:auto;border-radius:10px;border:1px solid rgba(6,40,61,0.04);background:linear-gradient(180deg,#fbffff,#f7ffff)}
+    pre{margin:0;white-space:pre;tab-size:4}
+    code{display:block;white-space:pre;font-family:var(--mono);font-size:13px}
+    .code-line{display:block;padding:2px 6px;border-radius:6px;transition:background var(--transition),opacity var(--transition),max-height var(--transition),transform var(--transition);overflow:hidden}
+    .code-line:hover{background:rgba(3,55,79,0.03)}
+    .line-number{display:inline-block;width:44px;color:#98a0a6;text-align:right;padding-right:12px;user-select:none}
+    .line-content{display:inline-block;white-space:pre}
+
+    /* Comment styling & hide/show */
+    .comment-line{color:#64748b}
+    .comments-hidden .comment-line{opacity:0;max-height:0;margin:0;padding:0;transform:translateX(-6px);pointer-events:none}
+    .comment-indicator{font-size:11px;color:#94a3b8;margin-left:8px}
+
+    /* Right card */
+    .meta-card{display:flex;flex-direction:column;gap:10px;padding:14px}
+    .meta-card h3{margin:0;font-size:1rem}
+    .muted{color:var(--muted);font-size:0.95rem}
+
+    /* Responsive */
+    @media (max-width:880px){
+      .main{flex-direction:column}
+      .right{width:100%}
+    }
+
+    /* Animations */
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    /* Accessibility focus-visible */
+    :focus{outline-offset:3px}
+    *:focus:not(:focus-visible){outline:none}
+
+    /* subtle download link style */
+    a.download-link{display:inline-block;padding:8px 10px;border-radius:8px;background:linear-gradient(180deg,var(--accent-2),#ffb69b);color:#4a2b20;text-decoration:none;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="app" role="main">
+    <header>
+      <div class="title">
+        <h1>Visor de Código — Archivo mostrado</h1>
+        <p class="lead">Muestra el contenido exacto entre los delimitadores; copiar, alternar comentarios y descargar.</p>
+      </div>
+    </header>
+
+    <section class="main" aria-labelledby="main-title">
+      <div class="panel left" role="region" aria-label="Área de código">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>Bloque de código</strong>
+          <div class="controls" role="toolbar" aria-label="Controles de código">
+            <button id="copyBtn" class="control" aria-label="Copiar código" title="Copiar código" aria-live="polite">Copiar código</button>
+            <button id="toggleCommentsBtn" class="control" aria-pressed="false" aria-label="Alternar comentarios" title="Alternar comentarios">Alternar comentarios</button>
+            <button id="downloadBtn" class="control" aria-label="Descargar JavaScript" title="Descargar .js">Descargar .js</button>
+          </div>
+        </div>
+
+        <div class="code-card" id="codeCard" tabindex="0" aria-labelledby="code-label" role="region">
+          <div id="code-label" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Código fuente</div>
+          <pre id="codeBlock" aria-live="polite"><code></code></pre>
+        </div>
+      </div>
+
+      <aside class="panel right" role="complementary" aria-label="Descripción">
+        <div class="meta-card">
+          <h3>Descripción</h3>
+          <p class="muted">Este visor extrae exactamente el contenido que se encuentra entre los delimitadores <code>START_CONTENT</code> y <code>END_CONTENT</code>, lo muestra escapado en un bloque de código con tipografía monospace y permite copiarlo o descargarlo como archivo <code>.js</code>. El botón "Alternar comentarios" oculta o muestra las líneas de comentario de JavaScript.</p>
+          <div>
+            <strong>Accesibilidad:</strong>
+            <ul style="margin:8px 0 0 18px;padding:0;color:var(--muted)">
+              <li>Botones con <code>aria-label</code> y <code>aria-pressed</code>.</li>
+              <li>Foco visible y roles semánticos.</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <!-- Raw block with delimiters and exact file content.
+       El contenido entre START_CONTENT y END_CONTENT se inserta exactamente como texto plano aquí. -->
+  <script id="raw-content" type="text/plain">
+START_CONTENT
+//suma dos numeros a + b
+function suma(a, b) {
+    return a + b;
+}
+function sumaEnteros(a, b) {
+    if (!Number.isInteger(a) || !Number.isInteger(b)) {
+        throw new Error('Ambos parámetros deben ser números enteros');
+    }
+    return a + b;
+}
+function sumaConComentarios(a, b) {
+	// 'a' y 'b' son los dos valores que recibimos como entrada.
+	// Aquí comprobamos que 'a' sea de tipo 'number'.
+	if (typeof a !== 'number') {
+		// Si 'a' no es un número, lanzamos un error con un mensaje claro.
+		throw new Error('El primer parámetro debe ser un número');
+	}
+	// Aquí comprobamos que 'b' sea de tipo 'number'.
+	if (typeof b !== 'number') {
+		// Si 'b' no es un número, lanzamos un error con un mensaje claro.
+		throw new Error('El segundo parámetro debe ser un número');
+	}
+	// Sumamos 'a' y 'b' y guardamos el resultado en una variable llamada 'resultado'.
+	var resultado = a + b;
+	// Devolvemos el valor de 'resultado' al código que llamó a esta función.
+	return resultado;
+}
+
+/*
+Variables en JavaScript — analogía de cajas de mudanza
+1) Definición breve:
+Una variable es un contenedor que guarda un valor para usarlo luego.
+
+2) Analogía paso a paso (caja = variable):
+- Caja = variable: una caja donde guardas algo.
+- Etiqueta = nombre: pones una etiqueta para saber qué hay dentro.
+- Contenido = valor: lo que pones dentro (número, texto, lista...).
+- Cerrar/abrir = reasignar/leer: abres la caja para ver (leer) o cambias lo que hay dentro (reasignar).
+- Caja fija = const: una caja que no puedes volver a cerrar con otro contenido (no puedes reasignar).
+- Caja vacía = undefined/null: una caja vacía (undefined) o una caja vacía intencionalmente (null).
+
+3) Sintaxis mínima (ejemplos comentados):
+*/
+// Ejemplo con let (se puede reasignar)
+let edad = 30; // caja con etiqueta 'edad' y valor 30
+
+// Ejemplo con const (no se puede reasignar)
+const PI = 3.14159; // caja fija llamada 'PI'
+
+// Ejemplo con var (antiguo, evita usarlo en código moderno)
+var nombre = "Ana"; // similar a let pero con comportamiento histórico distinto
+
+/*
+4) Ejemplos ejecutables y comentados
+*/
+// Ejemplo 1: número
+let numero = 10; // declaro una variable numérica
+console.log("Número:", numero); // muestra: Número: 10
+
+// Ejemplo 2: texto (string)
+let saludo = "Hola, mundo"; // declaro una variable de texto
+console.log("Saludo:", saludo); // muestra: Saludo: Hola, mundo
+
+// Ejemplo 3: arreglo
+let lista = [1, 2, 3]; // declaro una variable que es un arreglo
+console.log("Arreglo:", lista); // muestra: Arreglo: [1, 2, 3]
+
+/*
+5) Preguntas de comprobación (cortas) — respuestas:
+P1: ¿Qué es la "etiqueta" en la analogía? 
+R1: El nombre de la variable.
+
+P2: ¿Qué palabra usas para crear una variable que no vas a reasignar?
+R2: const
+
+P3: ¿Cómo representas una caja vacía intencionalmente?
+R3: null
+
+6) Ejercicio práctico corto:
+Crea 3 variables y reasigna una de ellas; muestra su valor.
+(Pista rápida: usa let para la que vas a reasignar, const para la fija; usa console.log para mostrar.)
+
+Nota opcional (muy breve): var tiene un comportamiento histórico distinto en alcance/hoisting; para comenzar, usa let y const.
+*/
+END_CONTENT
+  </script>
+
+  <script>
+    (function(){
+      // Element refs
+      const rawEl = document.getElementById('raw-content');
+      const codeBlock = document.querySelector('#codeBlock code');
+      const copyBtn = document.getElementById('copyBtn');
+      const toggleCommentsBtn = document.getElementById('toggleCommentsBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const codeCard = document.getElementById('codeCard');
+
+      // Utility: escape HTML
+      function escapeHtml(s){
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      // Extract between delimiters
+      function extractContent(text){
+        const re = /START_CONTENT([\s\S]*?)END_CONTENT/;
+        const m = text.match(re);
+        return m ? m[1].replace(/^\n/,'') : '';
+      }
+
+      // Render lines with comment detection (single-line // and block /* */)
+      function renderCode(raw){
+        const content = extractContent(raw);
+        originalCode = content; // stash for copy/download
+        const lines = content.split(/\r?\n/);
+        codeBlock.innerHTML = ''; // clear
+        let inBlock = false;
+        lines.forEach((ln, idx) => {
+          const div = document.createElement('div');
+          div.className = 'code-line';
+          const numberSpan = document.createElement('span');
+          numberSpan.className = 'line-number';
+          numberSpan.textContent = (idx+1).toString().padStart(2,' ');
+          const contentSpan = document.createElement('span');
+          contentSpan.className = 'line-content';
+
+          // Detect comment lines
+          const trimmed = ln.trim();
+          let isComment = false;
+          if(!inBlock){
+            if(trimmed.startsWith('//')) isComment = true;
+            if(trimmed.includes('/*')){
+              isComment = true;
+              inBlock = true;
+              // If the same line closes the block, end it
+              if(trimmed.includes('*/')) inBlock = false;
+            }
+          } else {
+            isComment = true;
+            if(trimmed.includes('*/')) inBlock = false;
+          }
+
+          if(isComment) div.classList.add('comment-line');
+
+          // Preserve whitespace by using textContent on a text node inside span
+          contentSpan.textContent = ln.replace(/\t/g,'    ');
+          div.appendChild(numberSpan);
+          div.appendChild(contentSpan);
+
+          // If it's a comment, add a subtle indicator (screen readers will still read)
+          if(isComment){
+            const ind = document.createElement('span');
+            ind.className = 'comment-indicator';
+            ind.setAttribute('aria-hidden','true');
+            ind.textContent = 'comment';
+            div.appendChild(ind);
+          }
+
+          codeBlock.appendChild(div);
+        });
+      }
+
+      // State
+      let commentsHidden = false;
+      let originalCode = '';
+
+      // Button handlers
+      copyBtn.addEventListener('click', async ()=>{
+        try{
+          await navigator.clipboard.writeText(originalCode);
+          copyBtn.textContent = 'Copiado ✓';
+          setTimeout(()=>copyBtn.textContent = 'Copiar código',1400);
+        }catch(e){
+          // fallback
+          const ta = document.createElement('textarea');
+          ta.value = originalCode;
+          document.body.appendChild(ta);
+          ta.select();
+          try{ document.execCommand('copy'); copyBtn.textContent = 'Copiado ✓'; } catch(err){ alert('No se pudo copiar automáticamente.'); }
+          ta.remove();
+          setTimeout(()=>copyBtn.textContent = 'Copiar código',1400);
+        }
+      });
+
+      toggleCommentsBtn.addEventListener('click', () => {
+        commentsHidden = !commentsHidden;
+        toggleCommentsBtn.setAttribute('aria-pressed', String(commentsHidden));
+        if(commentsHidden){
+          codeCard.classList.add('comments-hidden');
+          toggleCommentsBtn.textContent = 'Mostrar comentarios';
+        } else {
+          codeCard.classList.remove('comments-hidden');
+          toggleCommentsBtn.textContent = 'Alternar comentarios';
+        }
+        // Move focus back to toggle for keyboard flow
+        toggleCommentsBtn.focus();
+      });
+
+      downloadBtn.addEventListener('click', ()=>{
+        // Download the original code (without delimiters)
+        const blob = new Blob([originalCode], {type: 'text/javascript;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'index.js';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        downloadBtn.textContent = 'Descargando…';
+        setTimeout(()=>downloadBtn.textContent = 'Descargar .js',900);
+      });
+
+      // Keyboard shortcuts (optional): Ctrl/Cmd+C while code focused to copy
+      codeCard.addEventListener('keydown', (e)=>{
+        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c'){
+          e.preventDefault();
+          navigator.clipboard && navigator.clipboard.writeText(originalCode);
+          copyBtn.textContent = 'Copiado ✓';
+          setTimeout(()=>copyBtn.textContent = 'Copiar código',1200);
+        }
+      });
+
+      // Initial render
+      document.addEventListener('DOMContentLoaded', ()=>{
+        renderCode(rawEl.textContent);
+        // set accessible initial states
+        toggleCommentsBtn.setAttribute('aria-pressed','false');
+        copyBtn.setAttribute('aria-label','Copiar código al portapapeles');
+        downloadBtn.setAttribute('aria-label','Descargar el código como archivo .js');
+      });
+
+      // Expose for debugging (no external deps)
+      window.__visorDeCodigo = {
+        renderCode: ()=>renderCode(rawEl.textContent),
+        getRaw: ()=>originalCode
+      };
+    })();
+  </script>
+</body>
+</html>
