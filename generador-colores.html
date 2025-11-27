@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Colores Aleatorios</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .color-display {
+      width: 100%;
+      min-height: 300px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      transition: background-color 0.5s ease;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #3498db;
+    }
+
+    .color-code {
+      font-size: 48px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      letter-spacing: 2px;
+    }
+
+    .info-section {
+      background: #ecf0f1;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+    }
+
+    .color-text {
+      font-size: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-generate:active {
+      transform: translateY(-1px);
+    }
+
+    .btn-copy {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      flex: 0 1 auto;
+    }
+
+    .btn-copy:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-copy:active {
+      transform: translateY(-1px);
+    }
+
+    /* Mensaje de confirmación */
+    .copy-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      font-weight: 600;
+      opacity: 0;
+      transform: translateX(400px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .copy-notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .features {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 25px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.8;
+    }
+
+    .features strong {
+      color: #2c3e50;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .color-display {
+        min-height: 250px;
+      }
+
+      .color-code {
+        font-size: 36px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      button {
+        min-width: 100%;
+      }
+
+      .copy-notification {
+        left: 10px;
+        right: 10px;
+        transform: translateY(-100px);
+      }
+
+      .copy-notification.show {
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Generador de Colores Aleatorios</h1>
+
+    <!-- Área de visualización del color -->
+    <div class="color-display" id="colorDisplay">
+      <div class="color-code" id="colorCode">#3498DB</div>
+    </div>
+
+    <!-- Sección de información -->
+    <div class="info-section">
+      <div class="color-text">Código Hexadecimal:</div>
+      <div class="color-text" id="hexCodeDisplay">#3498DB</div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="button-group">
+      <button class="btn-generate" onclick="generarColorAleatorio()">
+        Generar Color
+      </button>
+      <button class="btn-copy" onclick="copiarAlPortapapeles()">
+        📋 Copiar Código
+      </button>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="features">
+      <strong>💡 Características:</strong><br>
+      ✓ Genera colores hexadecimales aleatorios<br>
+      ✓ Transiciones suaves al cambiar color<br>
+      ✓ Copia el código con un clic<br>
+      ✓ Responsive para todos los dispositivos
+    </div>
+  </div>
+
+  <!-- Notificación de copia -->
+  <div class="copy-notification" id="copyNotification">
+    ✓ ¡Código copiado al portapapeles!
+  </div>
+
+  <script>
+    /**
+     * Función para generar un color hexadecimal aleatorio
+     * @returns {string} Código hexadecimal en formato #RRGGBB
+     * 
+     * Explicación:
+     * - Math.random() genera un número entre 0 y 1
+     * - Multiplicamos por 16777215 (0xFFFFFF en decimal = máximo color RGB)
+     * - Math.floor() redondea hacia abajo
+     * - toString(16) convierte a hexadecimal
+     * - padStart(6, '0') asegura que tenga 6 dígitos (ej: 00A5F2)
+     */
+    function generarColorAleatorio() {
+      // Generar número aleatorio entre 0 y 16777215 (rango de colores RGB)
+      const numeroAleatorio = Math.floor(Math.random() * 16777215);
+      
+      // Convertir a hexadecimal y añadir el símbolo #
+      // toString(16) convierte a base 16 (hexadecimal)
+      // padStart(6, '0') asegura que siempre tenga 6 dígitos
+      const colorHex = '#' + numeroAleatorio.toString(16).toUpperCase().padStart(6, '0');
+      
+      // Actualizar el color del div
+      actualizarColor(colorHex);
+    }
+
+    /**
+     * Función para actualizar el color mostrado en la página
+     * @param {string} colorHex - Código hexadecimal del color (ej: #FF5733)
+     * 
+     * Explicación:
+     * - Cambia el fondo del div principal
+     * - Actualiza el texto que muestra el código hexadecimal en ambas ubicaciones
+     */
+    function actualizarColor(colorHex) {
+      // Obtener referencia del elemento donde se muestra el color
+      const colorDisplay = document.getElementById('colorDisplay');
+      const colorCode = document.getElementById('colorCode');
+      const hexCodeDisplay = document.getElementById('hexCodeDisplay');
+      
+      // Cambiar el color de fondo del div (con transición suave)
+      colorDisplay.style.backgroundColor = colorHex;
+      
+      // Actualizar el texto del código hexadecimal en ambas ubicaciones
+      colorCode.textContent = colorHex;
+      hexCodeDisplay.textContent = colorHex;
+    }
+
+    /**
+     * Función para copiar el código hexadecimal al portapapeles
+     * @async
+     * 
+     * Explicación:
+     * - Usa la API moderna del navegador (navigator.clipboard)
+     * - Copia el código hexadecimal actual
+     * - Muestra una notificación visual de confirmación
+     * - Oculta la notificación después de 2 segundos
+     */
+    function copiarAlPortapapeles() {
+      // Obtener el código hexadecimal actual
+      const codigoHex = document.getElementById('hexCodeDisplay').textContent;
+      
+      // Usar la API Clipboard para copiar al portapapeles
+      // navigator.clipboard es más moderno que la alternativa con textarea
+      navigator.clipboard.writeText(codigoHex)
+        .then(() => {
+          // Si la copia fue exitosa, mostrar notificación
+          mostrarNotificacion();
+        })
+        .catch(err => {
+          // Si hay error, mostrar mensaje alternativo
+          console.error('Error al copiar:', err);
+          alert('Error al copiar el código');
+        });
+    }
+
+    /**
+     * Función para mostrar una notificación visual de confirmación
+     * 
+     * Explicación:
+     * - Muestra un mensaje flotante que confirma que se copió el código
+     * - Añade una clase 'show' para activar la animación
+     * - Se oculta automáticamente después de 2 segundos
+     */
+    function mostrarNotificacion() {
+      // Obtener el elemento de notificación
+      const notification = document.getElementById('copyNotification');
+      
+      // Añadir clase para mostrar (con animación suave)
+      notification.classList.add('show');
+      
+      // Remover la clase después de 2 segundos para ocultar
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
+    }
+
+    /**
+     * Generar un color aleatorio cuando carga la página
+     * Esto asegura que la página no comience con el color por defecto
+     */
+    window.addEventListener('load', () => {
+      generarColorAleatorio();
+    });
+
+    /**
+     * Permitir generar color presionando Enter
+     * Mejora la experiencia del usuario
+     */
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        generarColorAleatorio();
+      }
+    });
+  </script>
+</body>
+</html>
