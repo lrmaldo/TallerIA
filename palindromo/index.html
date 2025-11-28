@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Detector de Palíndromos</title>
+	<style>
+		:root{--bg:#f6f9fc;--card:#fff;--accent:#6c5ce7;--success:#2ecc71;--danger:#e74c3c}
+		*{box-sizing:border-box}
+		body{margin:0;background:var(--bg);font-family:Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+		.card{background:var(--card);max-width:680px;width:100%;padding:28px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.08)}
+		h1{font-size:1.4rem;margin:0 0 12px;color:#182026}
+		p.lead{margin:0 0 18px;color:#394249}
+		.form-row{display:flex;gap:12px;align-items:center}
+		input[type="text"]{flex:1;padding:12px 14px;font-size:1rem;border:1px solid #dfe6ee;border-radius:8px}
+		input[type="text"]:focus{outline:3px solid rgba(108,92,231,.12);border-color:var(--accent)}
+		button{padding:10px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+		button[aria-pressed="true"]{box-shadow:0 6px 18px rgba(108,92,231,.28)}
+		button.secondary{background:#eef2ff;color:#1f2937}
+		.result{margin-top:18px;padding:14px;border-radius:8px;background:#f8fafc;border:1px solid #eef2f6;min-height:48px;display:flex;align-items:center;gap:12px}
+		.status{font-weight:700}
+		.ok{color:var(--success)}
+		.no{color:var(--danger)}
+		.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+		@media (max-width:520px){.form-row{flex-direction:column;align-items:stretch}button{width:100%}}
+	</style>
+</head>
+<body>
+	<main class="card" role="main" aria-labelledby="title">
+		<h1 id="title">Detector de Palíndromos</h1>
+		<p class="lead">Ingresa una palabra o frase y comprueba si es palíndromo. Se ignoran espacios y mayúsculas.</p>
+
+		<div class="form-row">
+			<label for="texto" class="sr-only">Texto a comprobar</label>
+			<input id="texto" type="text" placeholder="Ej: Anilina, Reconocer, A man a plan a canal Panama" aria-label="Texto a comprobar" />
+			<button id="btnCheck">Comparar</button>
+			<button id="btnClear" class="secondary" aria-label="Limpiar texto">Limpiar</button>
+		</div>
+
+		<div id="result" class="result" aria-live="polite">Introduce texto y pulsa <strong>Comparar</strong>.</div>
+	</main>
+
+	<!-- Usamos el script de lógica (archivo provisto) -->
+	<script src="palindromo.js"></script>
+	<script>
+		// Referencias a elementos
+		const input = document.getElementById('texto');
+		const btn = document.getElementById('btnCheck');
+		const btnClear = document.getElementById('btnClear');
+		const resultEl = document.getElementById('result');
+
+		/**
+		 * Mostrar resultado en la interfaz
+		 * @param {boolean} es - true si es palíndromo
+		 * @param {string} texto - texto original mostrado
+		 */
+		function mostrarResultado(es, texto){
+			// Limpiar previo
+			resultEl.innerHTML = '';
+			const span = document.createElement('span');
+			span.className = 'status ' + (es ? 'ok' : 'no');
+			span.textContent = es ? 'Sí — es palíndromo' : 'No — no es palíndromo';
+			const detail = document.createElement('div');
+			detail.style.marginLeft = '8px';
+			detail.style.color = '#425164';
+			detail.textContent = `"${texto}"`;
+			resultEl.appendChild(span);
+			resultEl.appendChild(detail);
+		}
+
+		/**
+		 * Manejar la acción de comprobar usando la función esPalindromo del archivo palindromo.js
+		 */
+		function handleCheck(){
+			const val = input.value || '';
+			if(val.trim() === ''){
+				resultEl.textContent = 'Por favor ingresa una palabra o frase para comparar.';
+				return;
+			}
+
+			// Lógica: llamamos a esPalindromo (definida en palindromo.js)
+			try{
+				const es = esPalindromo(val);
+				mostrarResultado(es, val.trim());
+			} catch(err){
+				resultEl.textContent = 'Error al evaluar: ' + (err && err.message ? err.message : String(err));
+			}
+		}
+
+		// Eventos
+		btn.addEventListener('click', handleCheck);
+		btnClear.addEventListener('click', ()=>{ input.value = ''; input.focus(); resultEl.textContent = 'Introduce texto y pulsa Comparar.'; });
+
+		// Soporte para Enter en el input
+		input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleCheck(); });
+	</script>
+</body>
+</html>
+

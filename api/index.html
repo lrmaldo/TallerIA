@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .search-section input {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            width: 300px;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-section button {
+            padding: 12px 30px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease;
+        }
+
+        .search-section button:hover {
+            background: #ff5252;
+        }
+
+        .pokemon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .pokemon-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pokemon-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .pokemon-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        .pokemon-card h3 {
+            font-size: 0.9em;
+            color: #333;
+            text-transform: capitalize;
+            margin-bottom: 5px;
+        }
+
+        .pokemon-id {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .pagination button.active {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+            clear: both;
+        }
+
+        .modal-header img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            text-transform: capitalize;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .modal-id {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .type-normal { background: #a8a878; }
+        .type-fire { background: #f08030; }
+        .type-water { background: #6890f0; }
+        .type-grass { background: #78c850; }
+        .type-electric { background: #f8d030; color: #333; }
+        .type-ice { background: #98d8d8; color: #333; }
+        .type-fighting { background: #c03028; }
+        .type-poison { background: #a040a0; }
+        .type-ground { background: #e0c068; color: #333; }
+        .type-flying { background: #a890f0; }
+        .type-psychic { background: #f85888; }
+        .type-bug { background: #a8b820; }
+        .type-rock { background: #b8a038; }
+        .type-ghost { background: #705898; }
+        .type-dragon { background: #7038f8; }
+        .type-dark { background: #705848; }
+        .type-steel { background: #b8b8d0; color: #333; }
+        .type-fairy { background: #ee99ac; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .stat-item h4 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-bar {
+            background: #ddd;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.5s ease;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin: 50px 0;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .pokemon-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .search-section input {
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔴 Pokédex 🔴</h1>
+            <p>Explora y descubre todos los Pokémon</p>
+        </div>
+
+        <div class="search-section">
+            <input 
+                type="text" 
+                id="inputPokemon" 
+                placeholder="Busca por nombre o ID (ej: pikachu, 25)"
+            >
+            <button id="btnBuscar">Buscar</button>
+        </div>
+
+        <div id="errorMessage"></div>
+        <div id="loadingMessage" class="loading" style="display: none;">Cargando Pokémon...</div>
+        
+        <div class="pokemon-grid" id="pokemonGrid">
+            <!-- Los Pokémon aparecerán aquí -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- Los botones de paginación aparecerán aquí -->
+        </div>
+    </div>
+
+    <!-- Modal para detalles del Pokémon -->
+    <div class="modal" id="pokemonModal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <div class="modal-header">
+                <img id="modalImage" src="" alt="Pokémon">
+                <h2 id="modalName"></h2>
+                <p class="modal-id" id="modalId"></p>
+            </div>
+
+            <div class="modal-section">
+                <h3>Tipos</h3>
+                <div id="modalTypes"></div>
+            </div>
+
+            <div class="modal-section">
+                <h3>Altura y Peso</h3>
+                <p>Altura: <strong id="modalHeight"></strong></p>
+                <p>Peso: <strong id="modalWeight"></strong></p>
+            </div>
+
+            <div class="modal-section">
+                <h3>Estadísticas</h3>
+                <div class="stats-grid" id="modalStats"></div>
+            </div>
+
+            <div class="modal-section">
+                <h3>Habilidades</h3>
+                <div id="modalAbilities"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taller de Programación con IA</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-color: #667eea;
+      --secondary-color: #764ba2;
+      --accent-color: #f093fb;
+      --text-dark: #2c3e50;
+      --text-light: #7f8c8d;
+      --bg-light: #f8f9fa;
+      --border-radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--text-dark);
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: slideDown 0.6s ease-out;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      color: white;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 1.3rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
+
+    /* Contenedor principal */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Grid de proyectos */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    /* Tarjeta de proyecto */
+    .project-card {
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      transition: var(--transition);
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-card:nth-child(1) { animation-delay: 0.1s; }
+    .project-card:nth-child(2) { animation-delay: 0.2s; }
+    .project-card:nth-child(3) { animation-delay: 0.3s; }
+    .project-card:nth-child(4) { animation-delay: 0.4s; }
+    .project-card:nth-child(5) { animation-delay: 0.5s; }
+    .project-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .project-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      animation: slideRight 0.6s ease-out;
+    }
+
+    /* Header de la tarjeta */
+    .card-header {
+      padding: 25px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .project-card:nth-child(1) .card-icon { animation-delay: 0s; }
+    .project-card:nth-child(2) .card-icon { animation-delay: 0.3s; }
+    .project-card:nth-child(3) .card-icon { animation-delay: 0.6s; }
+    .project-card:nth-child(4) .card-icon { animation-delay: 0.9s; }
+    .project-card:nth-child(5) .card-icon { animation-delay: 1.2s; }
+    .project-card:nth-child(6) .card-icon { animation-delay: 1.5s; }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 5px;
+    }
+
+    .card-category {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Cuerpo de la tarjeta */
+    .card-body {
+      padding: 20px 25px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-description {
+      font-size: 1rem;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e8f4f8;
+      color: var(--primary-color);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* Pie de la tarjeta */
+    .card-footer {
+      padding: 15px 25px;
+      background: var(--bg-light);
+      border-top: 1px solid #ecf0f1;
+    }
+
+    .project-link {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 10px 25px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: var(--transition);
+      border: 2px solid transparent;
+    }
+
+    .project-link:hover {
+      transform: translateX(5px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.95rem;
+      animation: fadeIn 0.8s ease-out 0.8s forwards;
+      opacity: 0;
+    }
+
+    .footer-text {
+      margin-bottom: 10px;
+    }
+
+    .footer-emoji {
+      display: inline-block;
+      animation: spin 3s linear infinite;
+    }
+
+    /* Animaciones */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideRight {
+      from {
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      .subtitle {
+        font-size: 1.1rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .card-icon {
+        font-size: 2.5rem;
+      }
+
+      .card-title {
+        font-size: 1.3rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+
+      header {
+        margin-bottom: 40px;
+      }
+
+      .projects-grid {
+        gap: 15px;
+      }
+
+      .card-header {
+        padding: 20px;
+      }
+
+      .card-body {
+        padding: 15px 20px;
+      }
+
+      .card-footer {
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <h1>🎓 Taller de Programación con IA</h1>
+      <p class="subtitle">Explora nuestros proyectos educativos</p>
+    </header>
+
+    <!-- Grid de Proyectos -->
+    <div class="projects-grid">
+      <!-- Proyecto 1: Conversor de Temperaturas -->
+      <div class="project-card">
+        <div class="card-header">
+          <span class="card-icon">🌡️</span>
+          <h2 class="card-title">Conversor de Temperaturas</h2>
+          <p class="card-category">Conversión</p>
+        </div>
+        <div class="card-body">
+          <p class="card-description">
+            Aplicación para convertir temperaturas entre Celsius, Fahrenheit y Kelvin. Incluye validación de entrada y manejo de errores.
+          </p>
+          <div class="card-tags">
+            <span class="tag">JavaScript</span>
+            <span class="tag">Fórmulas</span>
+            <span class="tag">Validación</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="conversor-temperaturas.html" class="project-link">Ver Proyecto →</a>
+        </div>
+      </div>
+
+      <!-- Proyecto 2: Generador de Colores -->
+      <div class="project-card">
+        <div class="card-header">
+          <span class="card-icon">🎨</span>
+          <h2 class="card-title">Generador de Colores</h2>
+          <p class="card-category">Generación Aleatoria</p>
+        </div>
+        <div class="card-body">
+          <p class="card-description">
+            Generador de colores hexadecimales aleatorios con interfaz interactiva. Copia códigos al portapapeles con un clic.
+          </p>
+          <div class="card-tags">
+            <span class="tag">Random</span>
+            <span class="tag">Hexadecimal</span>
+            <span class="tag">Animaciones</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="generador-colores.html" class="project-link">Ver Proyecto →</a>
+        </div>
+      </div>
+
+      <!-- Proyecto 3: Validador de Palíndromos -->
+      <div class="project-card">
+        <div class="card-header">
+          <span class="card-icon">🔤</span>
+          <h2 class="card-title">Validador de Palíndromos</h2>
+          <p class="card-category">Análisis de Cadenas</p>
+        </div>
+        <div class="card-body">
+          <p class="card-description">
+            Herramienta para verificar si una palabra o frase es un palíndromo. Ignora espacios y puntuación.
+          </p>
+          <div class="card-tags">
+            <span class="tag">Strings</span>
+            <span class="tag">Lógica</span>
+            <span class="tag">Recursión</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="palindromo/index.html" class="project-link">Ver Proyecto →</a>
+        </div>
+      </div>
+
+      <!-- Proyecto 4: API Rick and Morty -->
+      <div class="project-card">
+        <div class="card-header">
+          <span class="card-icon">👾</span>
+          <h2 class="card-title">Rick and Morty API</h2>
+          <p class="card-category">Consumo de APIs</p>
+        </div>
+        <div class="card-body">
+          <p class="card-description">
+            Explorador interactivo de personajes de Rick and Morty. Consume datos de una API externa en tiempo real.
+          </p>
+          <div class="card-tags">
+            <span class="tag">APIs REST</span>
+            <span class="tag">Fetch</span>
+            <span class="tag">JSON</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="rickandmortyapi/index.html" class="project-link">Ver Proyecto →</a>
+        </div>
+      </div>
+
+      <!-- Proyecto 5: Manipulación del DOM -->
+      <div class="project-card">
+        <div class="card-header">
+          <span class="card-icon">🎯</span>
+          <h2 class="card-title">Manipulación del DOM</h2>
+          <p class="card-category">DOM Interactivo</p>
+        </div>
+        <div class="card-body">
+          <p class="card-description">
+            Ejemplos prácticos de manipulación del Document Object Model. Interacción dinámica con elementos HTML.
+          </p>
+          <div class="card-tags">
+            <span class="tag">DOM</span>
+            <span class="tag">Eventos</span>
+            <span class="tag">Interactividad</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="dia-2-dom/index.html" class="project-link">Ver Proyecto →</a>
+        </div>
+      </div>
+
+      <!-- Proyecto 6: API Consultas -->
+      <div class="project-card">
+        <div class="card-header">
+          <span class="card-icon">🌐</span>
+          <h2 class="card-title">API Consultas</h2>
+          <p class="card-category">Backend Básico</p>
+        </div>
+        <div class="card-body">
+          <p class="card-description">
+            Proyecto de API básica para realizar consultas y operaciones. Introduce conceptos de backend y bases de datos.
+          </p>
+          <div class="card-tags">
+            <span class="tag">API</span>
+            <span class="tag">Backend</span>
+            <span class="tag">Consultas</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="api/index.html" class="project-link">Ver Proyecto →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p class="footer-text">
+      Desarrollado con <span class="footer-emoji">❤️</span> en el Taller de Programación
+    </p>
+    <p class="footer-text">
+      © 2025 - Aprendiendo programación con IA
+    </p>
+  </footer>
+</body>
+</html>
